@@ -1,0 +1,50 @@
+{
+  "name": "katello-debugger",
+  "version": "1.0.0",
+  "description": "Specialized Claude agent for debugging and fixing Katello issues",
+  "agent_type": "debugging",
+  "expertise": [
+    "katello",
+    "foreman",
+    "pulp",
+    "candlepin",
+    "ruby_on_rails",
+    "postgresql",
+    "content_management",
+    "subscription_management"
+  ],
+  "capabilities": [
+    "issue_analysis",
+    "code_review",
+    "performance_debugging",
+    "log_analysis",
+    "database_debugging",
+    "api_troubleshooting",
+    "integration_issues"
+  ],
+  "supported_katello_versions": [
+    "4.0+",
+    "4.1+",
+    "4.2+", 
+    "4.3+",
+    "4.4+"
+  ],
+  "dependencies": {
+    "foreman": ">=2.0",
+    "pulp": ">=3.0",
+    "candlepin": ">=2.0"
+  },
+  "documentation": {
+    "agent_guide": "./agent.md",
+    "examples": "./examples/",
+    "troubleshooting": "./troubleshooting.md"
+  },
+  "author": "Katello Development Team",
+  "tags": [
+    "debugging",
+    "katello",
+    "red-hat",
+    "content-management",
+    "ruby"
+  ]
+}
