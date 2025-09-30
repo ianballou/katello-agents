@@ -87,6 +87,13 @@ You are a senior Foreman ecosystem developer with deep expertise in Rails, React
 
 ## Development Environment Specifics
 
+### Foreman and Katello Architecture
+**Important**: Katello is a plugin to Foreman, not a standalone application. This means:
+- All `rake` and `rails` commands must be run from the **Foreman directory** (typically `/home/vagrant/foreman` in development environments)
+- Commands must be prefixed with `bundle exec` to use the correct gem versions
+- Katello's test files are located in the Katello directory, but tests are executed from Foreman's context
+- The application loads Katello as a Rails engine/plugin during initialization
+
 ### Testing Commands
 - **Rails Tests**: Use Rails' built-in testing framework (Minitest)
   - Run all tests: `bundle exec rake test`
@@ -96,6 +103,55 @@ You are a senior Foreman ecosystem developer with deep expertise in Rails, React
   - GraphQL tests: `bundle exec rake test:graphql`
   - External tests: `bundle exec rake test:external`
 
+### ktest - Katello Test Runner Utility
+The `ktest` utility is a convenient wrapper for running Katello tests from the development environment. It handles the path setup automatically.
+
+**Usage**:
+```bash
+# Run specific test file
+ktest /path/to/test_file.rb
+
+# Run specific test method
+ktest /path/to/test_file.rb -n test_method_name
+
+# Run multiple test files
+ktest /path/to/test1.rb /path/to/test2.rb
+
+# Run all Katello tests (no arguments)
+ktest
+```
+
+**ktest Script** (typically deployed with katello_devel scenario):
+```bash
+#!/bin/bash
+#
+# Deployed with katello_devel scenario
+
+FOREMAN_PATH=/home/vagrant/foreman
+KATELLO_PATH=/home/vagrant/katello
+
+
+if [[ -n $1 ]]
+then
+  for var in "$@"
+  do
+    if [[ -f $var ]]
+    then
+      TEST_FILES="$TEST_FILES $(readlink -f $var)"
+    else
+      OTHER_OPTS="$OTHER_OPTS $var"
+    fi
+  done
+
+  cd $FOREMAN_PATH
+  RAKE_PATH=`bundle info rake --path`
+  TEST_FILES=$TEST_FILES bundle exec ruby -I"lib:test:${KATELLO_PATH}/test:${KATELLO_PATH}/spec" -I"${RAKE_PATH}/lib" -e "ENV['TEST_FILES'].split.each {|f| require f}" $TEST_FILES $OTHER_OPTS
+else
+  cd $FOREMAN_PATH
+  bundle exec rake test:katello
+fi
+```
+
 ### JavaScript Testing
 - **Foreman Frontend**: `npm test` (Jest with React Testing Library)
   - Watch mode: `npm run test:watch`
@@ -104,10 +160,20 @@ You are a senior Foreman ecosystem developer with deep expertise in Rails, React
   - Watch mode: `npm run test:watch`
   - Current changes: `npm run test:current`
 
+**Notes on JavaScript Testing**:
+- Foreman uses Jest with React Testing Library for modern React components
+- Katello also uses Jest for frontend testing
+- Tests should focus on user interactions and component behavior
+- Use watch mode during development for rapid feedback
+- Mock API calls and external dependencies appropriately
+
 ### Console Access
 - **Rails Console**: `bundle exec rake console` (uses custom console.rake task)
+  - **Run arbitrary code**: The console provides full access to the Rails application context. You can execute any Ruby code, query models, test methods, and debug issues interactively.
+  - Example: `User.first`, `Repository.where(name: 'test').first`, etc.
 - **Database Access**: PostgreSQL database named "katello" for development
-- **Bundler Context**: All rails/rake commands must be run from project directory using bundler
+- **Bundler Context**: All rails/rake commands must be run from the **Foreman directory** using bundler
+  - Remember: Even though you're working on Katello code, commands run from Foreman's root directory
 
 ### Code Quality & Linting
 - **Ruby**: Uses theforeman-rubocop gem with lenient.yml and minitest.yml configs
